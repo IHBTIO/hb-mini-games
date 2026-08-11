@@ -29,3 +29,4 @@ A collection of classic browser games I built as coding practice with AI assista
 - Some visual designs are generated with AI assistance
 
 ## 📂 Repository Structure
+- Easy
