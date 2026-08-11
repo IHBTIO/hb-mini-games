@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>数字华容道 - 增强版</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            padding: 20px;
+            overflow-x: hidden;
+            transition: background 0.5s ease;
+        }
+        
+        body.nature-bg {
+            background: linear-gradient(135deg, #1d976c, #93f9b9);
+        }
+        
+        body.space-bg {
+            background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+        }
+        
+        .container {
+            background-color: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.3);
+            padding: 30px;
+            width: 100%;
+            max-width: 550px;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s ease;
+        }
+        
+        .container:hover {
+            transform: translateY(-5px);
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        h1 {
+            color: #333;
+            font-size: 2.5rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            flex: 1;
+            text-align: center;
+        }
+        
+        .icon-btn {
+            background: none;
+            border: none;
+            font-size: 1.8rem;
+            color: #4dabf7;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            padding: 8px;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .icon-btn:hover {
+            background-color: rgba(77, 171, 247, 0.1);
+            transform: scale(1.1);
+        }
+        
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        
+        .info-item {
+            text-align: center;
+            flex: 1;
+        }
+        
+        .info-label {
+            font-size: 0.9rem;
+            color: #666;
+            margin-bottom: 5px;
+        }
+        
+        .info-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .game-board {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            grid-gap: 8px;
+            margin: 0 auto 25px auto;
+            background-color: #343a40;
+            padding: 10px;
+            border-radius: 10px;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+            max-width: 400px;
+            width: 100%;
+        }
+        
+        .tile {
+            aspect-ratio: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(145deg, #4dabf7, #339af0);
+            color: white;
+            font-size: 2.2rem;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            user-select: none;
+        }
+        
+        .tile:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        .tile.empty {
+            background: transparent;
+            box-shadow: none;
+            cursor: default;
+        }
+        
+        .tile.empty:hover {
+            transform: none;
+            box-shadow: none;
+        }
+        
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .difficulty {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+        }
+        
+        .difficulty-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background-color: #e9ecef;
+            color: #495057;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            min-height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .difficulty-btn:hover {
+            background-color: #dee2e6;
+            transform: translateY(-2px);
+        }
+        
+        .difficulty-btn.active {
+            background: linear-gradient(145deg, #51cf66, #40c057);
+            color: white;
+        }
+        
+        .shuffle-btn {
+            padding: 15px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(145deg, #ff6b6b, #fa5252);
+            color: white;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            min-height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+        }
+        
+        .shuffle-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+        
+        .message {
+            margin-top: 15px;
+            padding: 15px;
+            background-color: #51cf66;
+            color: white;
+            border-radius: 8px;
+            font-weight: bold;
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            animation: fadeIn 0.3s;
+        }
+        
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            font-size: 1.5rem;
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #666;
+        }
+        
+        .modal h2 {
+            margin-bottom: 20px;
+            color: #333;
+            text-align: center;
+        }
+        
+        .settings-option {
+            margin-bottom: 15px;
+            text-align: left;
+        }
+        
+        .settings-option label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        
+        .settings-option select, .settings-option input {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            font-size: 1rem;
+        }
+        
+        .about-content {
+            text-align: left;
+            line-height: 1.6;
+        }
+        
+        .about-content p {
+            margin-bottom: 15px;
+        }
+        
+        .signature {
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-top: 20px;
+            color: #4dabf7;
+        }
+        
+        .leaderboard-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        
+        .leaderboard-table th, .leaderboard-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        
+        .leaderboard-table th {
+            background-color: #f8f9fa;
+            font-weight: bold;
+        }
+        
+        .leaderboard-table tr:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+        
+        .leaderboard-table tr:hover {
+            background-color: #e9ecef;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        /* 针对小屏幕的优化 */
+        @media (max-width: 500px) {
+            .container {
+                padding: 20px 15px;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .tile {
+                font-size: 1.8rem;
+            }
+            
+            .game-info {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .difficulty {
+                flex-direction: column;
+            }
+            
+            .difficulty-btn, .shuffle-btn {
+                font-size: 1rem;
+            }
+            
+            .icon-btn {
+                font-size: 1.5rem;
+                width: 40px;
+                height: 40px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <button class="icon-btn" id="settings-btn">
+                <i class="fas fa-cog"></i>
+            </button>
+            <h1>数字华容道</h1>
+            <button class="icon-btn" id="about-btn">
+                <i class="fas fa-info-circle"></i>
+            </button>
+        </div>
+        
+        <div class="game-info">
+            <div class="info-item">
+                <div class="info-label">步数</div>
+                <div class="info-value" id="move-count">0</div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">时间</div>
+                <div class="info-value" id="timer">00:00</div>
+            </div>
+        </div>
+        
+        <div class="game-board" id="board">
+            <!-- 数字方块将通过JavaScript动态生成 -->
+        </div>
+        
+        <div class="controls">
+            <div class="difficulty">
+                <button class="difficulty-btn active" data-difficulty="easy">简单</button>
+                <button class="difficulty-btn" data-difficulty="medium">中等</button>
+                <button class="difficulty-btn" data-difficulty="hard">困难</button>
+                <button class="difficulty-btn" data-difficulty="expert">专家</button>
+            </div>
+            <button class="shuffle-btn" id="shuffle-btn">打乱数字</button>
+        </div>
+        
+        <div class="message" id="message">恭喜！你完成了拼图！</div>
+    </div>
+    
+    <!-- 设置模态框 -->
+    <div class="modal" id="settings-modal">
+        <div class="modal-content">
+            <button class="close-btn" id="close-settings">&times;</button>
+            <h2>游戏设置</h2>
+            <div class="settings-option">
+                <label for="bg-theme">背景主题</label>
+                <select id="bg-theme">
+                    <option value="default">默认渐变</option>
+                    <option value="nature">自然风格</option>
+                    <option value="space">太空风格</option>
+                </select>
+            </div>
+            <div class="settings-option">
+                <label for="tile-color">方块颜色</label>
+                <select id="tile-color">
+                    <option value="blue">蓝色</option>
+                    <option value="green">绿色</option>
+                    <option value="purple">紫色</option>
+                    <option value="orange">橙色</option>
+                </select>
+            </div>
+            <div class="settings-option">
+                <label for="font-size">数字字体大小</label>
+                <select id="font-size">
+                    <option value="normal">正常</option>
+                    <option value="large">大号</option>
+                    <option value="x-large">特大号</option>
+                </select>
+            </div>
+            <div class="settings-option">
+                <button class="shuffle-btn" id="leaderboard-btn" style="margin-top: 10px;">查看排行榜</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 关于模态框 -->
+    <div class="modal" id="about-modal">
+        <div class="modal-content">
+            <button class="close-btn" id="close-about">&times;</button>
+            <h2>关于数字华容道</h2>
+            <div class="about-content">
+                <p>数字华容道是一款经典的滑块拼图游戏，目标是通过滑动数字方块，使它们按顺序排列。</p>
+                <p>游戏规则：</p>
+                <ul>
+                    <li>点击与空白格相邻的数字方块可以移动它</li>
+                    <li>目标是将所有数字按顺序排列（从左到右，从上到下）</li>
+                    <li>使用尽可能少的步数和时间完成拼图</li>
+                </ul>
+                <p>游戏提供四种难度级别：</p>
+                <ul>
+                    <li>简单：轻微打乱，适合新手</li>
+                    <li>中等：适度打乱，适合有经验的玩家</li>
+                    <li>困难：高度打乱，挑战性较高</li>
+                    <li>专家：极度打乱，适合高手</li>
+                </ul>
+                <div class="signature">开发: IHBT</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- 排行榜模态框 -->
+    <div class="modal" id="leaderboard-modal">
+        <div class="modal-content">
+            <button class="close-btn" id="close-leaderboard">&times;</button>
+            <h2>排行榜</h2>
+            <div class="leaderboard-content">
+                <table class="leaderboard-table">
+                    <thead>
+                        <tr>
+                            <th>排名</th>
+                            <th>玩家</th>
+                            <th>难度</th>
+                            <th>步数</th>
+                            <th>时间</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboard-body">
+                        <!-- 排行榜数据将通过JavaScript动态生成 -->
+                    </tbody>
+                </table>
+                <button class="shuffle-btn" id="clear-leaderboard" style="margin-top: 20px;">清空排行榜</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // 游戏状态
+            const gameState = {
+                board: [],
+                emptyPos: { row: 3, col: 3 },
+                moveCount: 0,
+                timer: 0,
+                timerInterval: null,
+                isPlaying: false,
+                difficulty: 'easy',
+                playerName: '玩家'
+            };
+            
+            // 难度设置
+            const difficultySettings = {
+                easy: 30,    // 简单难度打乱次数
+                medium: 80,  // 中等难度打乱次数
+                hard: 150,   // 困难难度打乱次数
+                expert: 250  // 专家难度打乱次数
+            };
+            
+            // DOM元素
+            const boardElement = document.getElementById('board');
+            const moveCountElement = document.getElementById('move-count');
+            const timerElement = document.getElementById('timer');
+            const shuffleBtn = document.getElementById('shuffle-btn');
+            const messageElement = document.getElementById('message');
+            const difficultyBtns = document.querySelectorAll('.difficulty-btn');
+            const settingsBtn = document.getElementById('settings-btn');
+            const aboutBtn = document.getElementById('about-btn');
+            const settingsModal = document.getElementById('settings-modal');
+            const aboutModal = document.getElementById('about-modal');
+            const leaderboardModal = document.getElementById('leaderboard-modal');
+            const closeSettings = document.getElementById('close-settings');
+            const closeAbout = document.getElementById('close-about');
+            const closeLeaderboard = document.getElementById('close-leaderboard');
+            const bgThemeSelect = document.getElementById('bg-theme');
+            const tileColorSelect = document.getElementById('tile-color');
+            const fontSizeSelect = document.getElementById('font-size');
+            const leaderboardBtn = document.getElementById('leaderboard-btn');
+            const clearLeaderboardBtn = document.getElementById('clear-leaderboard');
+            const leaderboardBody = document.getElementById('leaderboard-body');
+            
+            // 初始化游戏
+            function initGame() {
+                // 创建初始棋盘
+                gameState.board = [];
+                let num = 1;
+                for (let i = 0; i < 4; i++) {
+                    gameState.board[i] = [];
+                    for (let j = 0; j < 4; j++) {
+                        if (i === 3 && j === 3) {
+                            gameState.board[i][j] = 0; // 空白格
+                        } else {
+                            gameState.board[i][j] = num++;
+                        }
+                    }
+                }
+                
+                gameState.emptyPos = { row: 3, col: 3 };
+                gameState.moveCount = 0;
+                gameState.timer = 0;
+                gameState.isPlaying = false;
+                
+                updateDisplay();
+                clearInterval(gameState.timerInterval);
+                updateTimer();
+                hideMessage();
+                
+                // 加载设置
+                loadSettings();
+            }
+            
+            // 更新显示
+            function updateDisplay() {
+                boardElement.innerHTML = '';
+                moveCountElement.textContent = gameState.moveCount;
+                
+                for (let i = 0; i < 4; i++) {
+                    for (let j = 0; j < 4; j++) {
+                        const value = gameState.board[i][j];
+                        const tile = document.createElement('div');
+                        tile.className = value === 0 ? 'tile empty' : 'tile';
+                        tile.textContent = value === 0 ? '' : value;
+                        tile.dataset.row = i;
+                        tile.dataset.col = j;
+                        
+                        // 应用方块颜色
+                        applyTileColor(tile);
+                        
+                        if (value !== 0) {
+                            tile.addEventListener('click', handleTileClick);
+                        }
+                        
+                        boardElement.appendChild(tile);
+                    }
+                }
+                
+                // 应用字体大小
+                applyFontSize();
+            }
+            
+            // 处理方块点击
+            function handleTileClick(event) {
+                if (!gameState.isPlaying) {
+                    startGame();
+                }
+                
+                const row = parseInt(event.target.dataset.row);
+                const col = parseInt(event.target.dataset.col);
+                
+                // 检查是否与空白格相邻
+                if (isAdjacent(row, col, gameState.emptyPos.row, gameState.emptyPos.col)) {
+                    moveTile(row, col);
+                    
+                    // 检查是否完成
+                    if (isPuzzleSolved()) {
+                        finishGame();
+                    }
+                }
+            }
+            
+            // 检查两个位置是否相邻
+            function isAdjacent(row1, col1, row2, col2) {
+                return (
+                    (Math.abs(row1 - row2) === 1 && col1 === col2) ||
+                    (Math.abs(col1 - col2) === 1 && row1 === row2)
+                );
+            }
+            
+            // 移动方块
+            function moveTile(row, col) {
+                // 交换点击的方块和空白格
+                const temp = gameState.board[row][col];
+                gameState.board[row][col] = 0;
+                gameState.board[gameState.emptyPos.row][gameState.emptyPos.col] = temp;
+                
+                // 更新空白格位置
+                gameState.emptyPos = { row, col };
+                
+                // 更新步数
+                gameState.moveCount++;
+                
+                updateDisplay();
+            }
+            
+            // 开始游戏
+            function startGame() {
+                if (!gameState.isPlaying) {
+                    gameState.isPlaying = true;
+                    gameState.timerInterval = setInterval(() => {
+                        gameState.timer++;
+                        updateTimer();
+                    }, 1000);
+                }
+            }
+            
+            // 完成游戏
+            function finishGame() {
+                gameState.isPlaying = false;
+                clearInterval(gameState.timerInterval);
+                showMessage();
+                
+                // 保存到排行榜
+                saveToLeaderboard();
+            }
+            
+            // 更新计时器显示
+            function updateTimer() {
+                const minutes = Math.floor(gameState.timer / 60);
+                const seconds = gameState.timer % 60;
+                timerElement.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+            
+            // 显示完成消息
+            function showMessage() {
+                messageElement.style.display = 'block';
+            }
+            
+            // 隐藏完成消息
+            function hideMessage() {
+                messageElement.style.display = 'none';
+            }
+            
+            // 检查拼图是否完成
+            function isPuzzleSolved() {
+                let num = 1;
+                for (let i = 0; i < 4; i++) {
+                    for (let j = 0; j < 4; j++) {
+                        if (i === 3 && j === 3) {
+                            if (gameState.board[i][j] !== 0) return false;
+                        } else {
+                            if (gameState.board[i][j] !== num++) return false;
+                        }
+                    }
+                }
+                return true;
+            }
+            
+            // 打乱拼图
+            function shufflePuzzle() {
+                // 重置游戏状态
+                gameState.moveCount = 0;
+                gameState.timer = 0;
+                gameState.isPlaying = false;
+                clearInterval(gameState.timerInterval);
+                updateTimer();
+                hideMessage();
+                
+                // 获取打乱次数
+                const shuffleCount = difficultySettings[gameState.difficulty];
+                
+                // 执行随机移动来打乱拼图
+                for (let i = 0; i < shuffleCount; i++) {
+                    const possibleMoves = getPossibleMoves();
+                    const randomMove = possibleMoves[Math.floor(Math.random() * possibleMoves.length)];
+                    moveTile(randomMove.row, randomMove.col);
+                }
+                
+                // 重置步数（打乱过程中的移动不计入）
+                gameState.moveCount = 0;
+                updateDisplay();
+            }
+            
+            // 获取可能的移动
+            function getPossibleMoves() {
+                const moves = [];
+                const { row, col } = gameState.emptyPos;
+                
+                // 上
+                if (row > 0) moves.push({ row: row - 1, col });
+                // 下
+                if (row < 3) moves.push({ row: row + 1, col });
+                // 左
+                if (col > 0) moves.push({ row, col: col - 1 });
+                // 右
+                if (col < 3) moves.push({ row, col: col + 1 });
+                
+                return moves;
+            }
+            
+            // 设置难度
+            function setDifficulty(difficulty) {
+                gameState.difficulty = difficulty;
+                
+                // 更新按钮状态
+                difficultyBtns.forEach(btn => {
+                    if (btn.dataset.difficulty === difficulty) {
+                        btn.classList.add('active');
+                    } else {
+                        btn.classList.remove('active');
+                    }
+                });
+            }
+            
+            // 应用方块颜色
+            function applyTileColor(tile) {
+                const color = tileColorSelect.value;
+                if (tile.classList.contains('empty')) return;
+                
+                switch(color) {
+                    case 'green':
+                        tile.style.background = 'linear-gradient(145deg, #51cf66, #40c057)';
+                        break;
+                    case 'purple':
+                        tile.style.background = 'linear-gradient(145deg, #9c36b5, #8b2cb5)';
+                        break;
+                    case 'orange':
+                        tile.style.background = 'linear-gradient(145deg, #ff922b, #f76707)';
+                        break;
+                    default: // blue
+                        tile.style.background = 'linear-gradient(145deg, #4dabf7, #339af0)';
+                }
+            }
+            
+            // 应用字体大小
+            function applyFontSize() {
+                const tiles = document.querySelectorAll('.tile:not(.empty)');
+                const size = fontSizeSelect.value;
+                
+                tiles.forEach(tile => {
+                    switch(size) {
+                        case 'large':
+                            tile.style.fontSize = '2.5rem';
+                            break;
+                        case 'x-large':
+                            tile.style.fontSize = '2.8rem';
+                            break;
+                        default: // normal
+                            tile.style.fontSize = '2.2rem';
+                    }
+                });
+            }
+            
+            // 应用背景主题
+            function applyBackgroundTheme() {
+                const theme = bgThemeSelect.value;
+                document.body.className = '';
+                
+                switch(theme) {
+                    case 'nature':
+                        document.body.classList.add('nature-bg');
+                        break;
+                    case 'space':
+                        document.body.classList.add('space-bg');
+                        break;
+                    default: // default
+                        // 使用默认背景，无需添加类
+                }
+            }
+            
+            // 加载设置
+            function loadSettings() {
+                const savedSettings = localStorage.getItem('puzzleSettings');
+                if (savedSettings) {
+                    const settings = JSON.parse(savedSettings);
+                    bgThemeSelect.value = settings.bgTheme || 'default';
+                    tileColorSelect.value = settings.tileColor || 'blue';
+                    fontSizeSelect.value = settings.fontSize || 'normal';
+                    
+                    applyBackgroundTheme();
+                    updateDisplay();
+                }
+            }
+            
+            // 保存设置
+            function saveSettings() {
+                const settings = {
+                    bgTheme: bgThemeSelect.value,
+                    tileColor: tileColorSelect.value,
+                    fontSize: fontSizeSelect.value
+                };
+                
+                localStorage.setItem('puzzleSettings', JSON.stringify(settings));
+            }
+            
+            // 保存到排行榜
+            function saveToLeaderboard() {
+                const entry = {
+                    player: gameState.playerName,
+                    difficulty: gameState.difficulty,
+                    moves: gameState.moveCount,
+                    time: gameState.timer,
+                    date: new Date().toISOString()
+                };
+                
+                let leaderboard = JSON.parse(localStorage.getItem('puzzleLeaderboard') || '[]');
+                leaderboard.push(entry);
+                
+                // 按步数排序，如果步数相同则按时间排序
+                leaderboard.sort((a, b) => {
+                    if (a.moves !== b.moves) {
+                        return a.moves - b.moves;
+                    }
+                    return a.time - b.time;
+                });
+                
+                // 只保留前20名
+                leaderboard = leaderboard.slice(0, 20);
+                
+                localStorage.setItem('puzzleLeaderboard', JSON.stringify(leaderboard));
+            }
+            
+            // 显示排行榜
+            function showLeaderboard() {
+                const leaderboard = JSON.parse(localStorage.getItem('puzzleLeaderboard') || '[]');
+                leaderboardBody.innerHTML = '';
+                
+                if (leaderboard.length === 0) {
+                    leaderboardBody.innerHTML = '<tr><td colspan="5" style="text-align: center;">暂无记录</td></tr>';
+                    return;
+                }
+                
+                leaderboard.forEach((entry, index) => {
+                    const row = document.createElement('tr');
+                    
+                    const minutes = Math.floor(entry.time / 60);
+                    const seconds = entry.time % 60;
+                    const timeStr = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                    
+                    row.innerHTML = `
+                        <td>${index + 1}</td>
+                        <td>${entry.player}</td>
+                        <td>${getDifficultyText(entry.difficulty)}</td>
+                        <td>${entry.moves}</td>
+                        <td>${timeStr}</td>
+                    `;
+                    
+                    leaderboardBody.appendChild(row);
+                });
+            }
+            
+            // 获取难度文本
+            function getDifficultyText(difficulty) {
+                switch(difficulty) {
+                    case 'easy': return '简单';
+                    case 'medium': return '中等';
+                    case 'hard': return '困难';
+                    case 'expert': return '专家';
+                    default: return '未知';
+                }
+            }
+            
+            // 清空排行榜
+            function clearLeaderboard() {
+                if (confirm('确定要清空排行榜吗？此操作不可撤销。')) {
+                    localStorage.removeItem('puzzleLeaderboard');
+                    showLeaderboard();
+                }
+            }
+            
+            // 事件监听
+            shuffleBtn.addEventListener('click', shufflePuzzle);
+            
+            difficultyBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    setDifficulty(this.dataset.difficulty);
+                });
+            });
+            
+            settingsBtn.addEventListener('click', function() {
+                settingsModal.style.display = 'flex';
+            });
+            
+            aboutBtn.addEventListener('click', function() {
+                aboutModal.style.display = 'flex';
+            });
+            
+            closeSettings.addEventListener('click', function() {
+                settingsModal.style.display = 'none';
+                saveSettings();
+            });
+            
+            closeAbout.addEventListener('click', function() {
+                aboutModal.style.display = 'none';
+            });
+            
+            closeLeaderboard.addEventListener('click', function() {
+                leaderboardModal.style.display = 'none';
+            });
+            
+            leaderboardBtn.addEventListener('click', function() {
+                settingsModal.style.display = 'none';
+                leaderboardModal.style.display = 'flex';
+                showLeaderboard();
+            });
+            
+            clearLeaderboardBtn.addEventListener('click', clearLeaderboard);
+            
+            bgThemeSelect.addEventListener('change', applyBackgroundTheme);
+            tileColorSelect.addEventListener('change', updateDisplay);
+            fontSizeSelect.addEventListener('change', updateDisplay);
+            
+            // 点击模态框外部关闭
+            window.addEventListener('click', function(event) {
+                if (event.target === settingsModal) {
+                    settingsModal.style.display = 'none';
+                    saveSettings();
+                }
+                if (event.target === aboutModal) {
+                    aboutModal.style.display = 'none';
+                }
+                if (event.target === leaderboardModal) {
+                    leaderboardModal.style.display = 'none';
+                }
+            });
+            
+            // 初始化游戏
+            initGame();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,912 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>极简飞行棋</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            color: #333;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        header {
+            margin-bottom: 25px;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 5px;
+            color: #2c3e50;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.1);
+        }
+        
+        .subtitle {
+            color: #7f8c8d;
+            font-size: 1.1rem;
+        }
+        
+        .game-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 25px;
+        }
+        
+        .board {
+            width: 500px;
+            height: 500px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            display: grid;
+            grid-template-columns: repeat(11, 1fr);
+            grid-template-rows: repeat(11, 1fr);
+            padding: 10px;
+            position: relative;
+        }
+        
+        .cell {
+            border: 1px solid #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-radius: 3px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .cell:hover {
+            background-color: rgba(52, 152, 219, 0.1);
+        }
+        
+        .cell.start {
+            background-color: #e8f4fc;
+            border: 2px dashed #3498db;
+        }
+        
+        .cell.finish {
+            background-color: #fff8e1;
+            border: 2px dashed #f1c40f;
+        }
+        
+        .cell.safe {
+            background-color: #e8f5e9;
+            border: 2px dashed #2ecc71;
+        }
+        
+        .cell.danger {
+            background-color: #ffebee;
+            border: 2px dashed #e74c3c;
+        }
+        
+        /* 棋盘上的飞机样式 */
+        .board-piece {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            position: absolute;
+            z-index: 10;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            border: 2px solid white;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            transition: transform 0.3s;
+        }
+        
+        .board-piece.red {
+            background: #e74c3c;
+            top: 5px;
+            left: 5px;
+        }
+        
+        .board-piece.blue {
+            background: #3498db;
+            top: 5px;
+            right: 5px;
+        }
+        
+        .board-piece.active {
+            transform: scale(1.2);
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+            border: 2px solid gold;
+        }
+        
+        /* 路径指示点 */
+        .path-dot {
+            position: absolute;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background-color: rgba(0, 0, 0, 0.3);
+            z-index: 5;
+        }
+        
+        .player-panel {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            min-width: 220px;
+        }
+        
+        .player-info {
+            margin-bottom: 20px;
+        }
+        
+        .player-title {
+            font-size: 1.3rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .player-piece {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 2px solid white;
+            box-shadow: 0 0 5px rgba(0,0,0,0.3);
+        }
+        
+        .player-red .player-piece {
+            background: #e74c3c;
+        }
+        
+        .player-blue .player-piece {
+            background: #3498db;
+        }
+        
+        .player-pieces {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 15px;
+        }
+        
+        .panel-piece {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            font-size: 0.9rem;
+            box-shadow: 0 3px 5px rgba(0,0,0,0.2);
+            border: 2px solid white;
+            transition: transform 0.3s;
+            cursor: pointer;
+        }
+        
+        .panel-piece.red {
+            background: #e74c3c;
+        }
+        
+        .panel-piece.blue {
+            background: #3498db;
+        }
+        
+        .panel-piece.active {
+            transform: scale(1.1);
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+            border: 2px solid #2c3e50;
+        }
+        
+        .panel-piece.finished {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+        
+        .dice-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 20px 0;
+        }
+        
+        .dice {
+            width: 80px;
+            height: 80px;
+            background: white;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 15px;
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            user-select: none;
+            transition: transform 0.3s;
+        }
+        
+        .dice:hover {
+            transform: scale(1.05);
+        }
+        
+        .dice.rolling {
+            animation: roll 0.5s ease-in-out 3;
+        }
+        
+        @keyframes roll {
+            0% { transform: rotate(0deg); }
+            25% { transform: rotate(90deg); }
+            50% { transform: rotate(180deg); }
+            75% { transform: rotate(270deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+        
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            font-size: 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: bold;
+        }
+        
+        button:hover {
+            background: #2980b9;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 10px rgba(0, 0, 0, 0.15);
+        }
+        
+        .status {
+            font-size: 1.4rem;
+            font-weight: bold;
+            margin: 20px 0;
+            color: #2c3e50;
+            min-height: 40px;
+        }
+        
+        .win-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 30px 50px;
+            border-radius: 10px;
+            text-align: center;
+            z-index: 10;
+            font-size: 2rem;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.8);
+            border: 3px solid gold;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 15px rgba(255, 215, 0, 0.8); }
+            50% { box-shadow: 0 0 40px rgba(255, 215, 0, 1); }
+            100% { box-shadow: 0 0 15px rgba(255, 215, 0, 0.8); }
+        }
+        
+        .instructions {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-size: 0.9rem;
+            color: #555;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            text-align: left;
+            max-width: 800px;
+        }
+        
+        @media (max-width: 900px) {
+            .game-container {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .board {
+                width: 90vw;
+                height: 90vw;
+                max-width: 400px;
+                max-height: 400px;
+            }
+            
+            .player-panel {
+                width: 100%;
+                max-width: 400px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>极简飞行棋</h1>
+            <div class="subtitle">经典童年游戏 · 极简复刻版</div>
+        </header>
+        
+        <div class="status" id="status">红方回合 - 点击骰子开始</div>
+        
+        <div class="game-container">
+            <div class="board" id="board"></div>
+            
+            <div class="player-panel">
+                <div class="player-info player-red">
+                    <div class="player-title">
+                        <div class="player-piece"></div>
+                        <span>红方</span>
+                    </div>
+                    <div class="player-pieces" id="red-pieces">
+                        <!-- 棋子由JS生成 -->
+                    </div>
+                    <div>基地: <span id="red-base">4</span> 架</div>
+                    <div>完成: <span id="red-finish">0</span> 架</div>
+                </div>
+                
+                <div class="player-info player-blue">
+                    <div class="player-title">
+                        <div class="player-piece"></div>
+                        <span>蓝方</span>
+                    </div>
+                    <div class="player-pieces" id="blue-pieces">
+                        <!-- 棋子由JS生成 -->
+                    </div>
+                    <div>基地: <span id="blue-base">4</span> 架</div>
+                    <div>完成: <span id="blue-finish">0</span> 架</div>
+                </div>
+                
+                <div class="dice-container">
+                    <div class="dice" id="dice">?</div>
+                    <div>点击骰子投掷</div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button id="rollBtn">投掷骰子</button>
+            <button id="resetBtn">重新开始</button>
+        </div>
+        
+        <div class="instructions">
+            <p><strong>游戏规则：</strong></p>
+            <ul>
+                <li>玩家轮流投掷骰子，点击骰子或"投掷骰子"按钮进行投掷</li>
+                <li>掷得6点可让一架飞机从基地起飞，并再掷一次</li>
+                <li>飞机按顺时针方向沿棋盘移动，掷得点数即为移动步数</li>
+                <li>飞机可跳过其他飞机，但落在同一格时，后到的飞机可将先到的飞机撞回基地</li>
+                <li>安全区（绿色格子）内的飞机不会被撞</li>
+                <li>四架飞机全部到达终点的玩家获胜</li>
+                <li><strong>移动路径：</strong>红方棋子沿红色虚线路径移动，蓝方棋子沿蓝色虚线路径移动</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const board = document.getElementById('board');
+            const status = document.getElementById('status');
+            const rollBtn = document.getElementById('rollBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const dice = document.getElementById('dice');
+            
+            // 游戏配置
+            const PLAYERS = ['red', 'blue']; // 只保留两个玩家
+            const PLAYER_NAMES = {red: '红方', blue: '蓝方'};
+            const PLAYER_COLORS = {red: '#e74c3c', blue: '#3498db'};
+            
+            // 游戏状态
+            let currentPlayer = 'red';
+            let diceValue = 0;
+            let gameOver = false;
+            let pieces = {
+                red: {base: 4, finish: 0, pieces: []},
+                blue: {base: 4, finish: 0, pieces: []}
+            };
+            
+            // 定义红方路径 (顺时针)
+            const redPath = [
+                // 起点到第一个拐角
+                {row: 1, col: 0}, {row: 1, col: 1}, {row: 1, col: 2}, {row: 1, col: 3}, {row: 1, col: 4},
+                // 向下移动
+                {row: 2, col: 4}, {row: 3, col: 4}, {row: 4, col: 4}, {row: 5, col: 4}, {row: 6, col: 4},
+                // 向右移动
+                {row: 6, col: 5}, {row: 6, col: 6}, {row: 6, col: 7}, {row: 6, col: 8}, {row: 6, col: 9},
+                // 向上移动
+                {row: 5, col: 9}, {row: 4, col: 9}, {row: 3, col: 9}, {row: 2, col: 9}, {row: 1, col: 9},
+                // 向左移动（接近终点）
+                {row: 1, col: 8}, {row: 1, col: 7}, {row: 1, col: 6}, {row: 1, col: 5},
+                // 进入终点区域
+                {row: 0, col: 5}, {row: 0, col: 4}, {row: 0, col: 3}, {row: 0, col: 2}, {row: 0, col: 1}, {row: 0, col: 0}
+            ];
+            
+            // 定义蓝方路径 (顺时针，与红方对称)
+            const bluePath = [
+                // 起点到第一个拐角
+                {row: 0, col: 5}, {row: 1, col: 5}, {row: 2, col: 5}, {row: 3, col: 5}, {row: 4, col: 5},
+                // 向右移动
+                {row: 4, col: 6}, {row: 4, col: 7}, {row: 4, col: 8}, {row: 4, col: 9}, {row: 4, col: 10},
+                // 向下移动
+                {row: 5, col: 10}, {row: 6, col: 10}, {row: 7, col: 10}, {row: 8, col: 10}, {row: 9, col: 10},
+                // 向左移动
+                {row: 9, col: 9}, {row: 9, col: 8}, {row: 9, col: 7}, {row: 9, col: 6}, {row: 9, col: 5},
+                // 向上移动（接近终点）
+                {row: 8, col: 5}, {row: 7, col: 5}, {row: 6, col: 5}, {row: 5, col: 5},
+                // 进入终点区域
+                {row: 5, col: 0}, {row: 6, col: 0}, {row: 7, col: 0}, {row: 8, col: 0}, {row: 9, col: 0}, {row: 10, col: 0}
+            ];
+            
+            // 棋盘上的飞机位置映射
+            let boardPieces = {};
+            
+            // 初始化棋盘
+            function initBoard() {
+                board.innerHTML = '';
+                boardPieces = {};
+                
+                // 创建11x11的棋盘
+                for (let row = 0; row < 11; row++) {
+                    for (let col = 0; col < 11; col++) {
+                        const cell = document.createElement('div');
+                        cell.className = 'cell';
+                        cell.dataset.row = row;
+                        cell.dataset.col = col;
+                        
+                        // 检查是否是特殊格子
+                        let cellText = '';
+                        let isStart = false;
+                        let isFinish = false;
+                        
+                        // 检查红方起点
+                        if (row === 1 && col === 0) {
+                            cell.className += ' start';
+                            cellText = '红方起点';
+                            isStart = true;
+                        }
+                        // 检查蓝方起点
+                        else if (row === 0 && col === 5) {
+                            cell.className += ' start';
+                            cellText = '蓝方起点';
+                            isStart = true;
+                        }
+                        // 检查红方终点
+                        else if (row === 0 && col === 0) {
+                            cell.className += ' finish';
+                            cellText = '红方终点';
+                            isFinish = true;
+                        }
+                        // 检查蓝方终点
+                        else if (row === 10 && col === 0) {
+                            cell.className += ' finish';
+                            cellText = '蓝方终点';
+                            isFinish = true;
+                        }
+                        // 检查安全区
+                        else if (
+                            (row === 5 && col === 0) ||
+                            (row === 5 && col === 4) ||
+                            (row === 5 && col === 8)
+                        ) {
+                            cell.className += ' safe';
+                            cellText = '安全区';
+                        }
+                        // 检查危险区
+                        else if (
+                            (row === 5 && col === 2) ||
+                            (row === 5 && col === 6) ||
+                            (row === 5 && col === 10)
+                        ) {
+                            cell.className += ' danger';
+                            cellText = '危险区';
+                        }
+                        
+                        // 显示文本
+                        cell.textContent = cellText || `${row}-${col}`;
+                        
+                        // 如果格子是空的，添加路径指示点
+                        if (!cellText) {
+                            // 检查是否在红方路径上
+                            const onRedPath = redPath.some(point => point.row === row && point.col === col);
+                            const onBluePath = bluePath.some(point => point.row === row && point.col === col);
+                            
+                            if (onRedPath || onBluePath) {
+                                const pathDot = document.createElement('div');
+                                pathDot.className = 'path-dot';
+                                
+                                if (onRedPath && onBluePath) {
+                                    // 如果两条路径交叉，使用混合颜色
+                                    pathDot.style.backgroundColor = '#9b59b6';
+                                } else if (onRedPath) {
+                                    pathDot.style.backgroundColor = '#e74c3c';
+                                } else if (onBluePath) {
+                                    pathDot.style.backgroundColor = '#3498db';
+                                }
+                                
+                                cell.appendChild(pathDot);
+                            }
+                        }
+                        
+                        board.appendChild(cell);
+                    }
+                }
+            }
+            
+            // 在棋盘上添加飞机
+            function addBoardPiece(player, pieceId, row, col) {
+                const key = `${row}-${col}`;
+                if (!boardPieces[key]) {
+                    boardPieces[key] = [];
+                }
+                
+                const boardPiece = document.createElement('div');
+                boardPiece.className = `board-piece ${player}`;
+                boardPiece.textContent = pieceId + 1;
+                boardPiece.dataset.player = player;
+                boardPiece.dataset.pieceId = pieceId;
+                
+                const cell = document.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`);
+                cell.appendChild(boardPiece);
+                
+                boardPieces[key].push({
+                    player,
+                    pieceId,
+                    element: boardPiece
+                });
+                
+                return boardPiece;
+            }
+            
+            // 从棋盘上移除飞机
+            function removeBoardPiece(player, pieceId, row, col) {
+                const key = `${row}-${col}`;
+                if (boardPieces[key]) {
+                    const index = boardPieces[key].findIndex(p => 
+                        p.player === player && p.pieceId === pieceId);
+                    
+                    if (index !== -1) {
+                        boardPieces[key][index].element.remove();
+                        boardPieces[key].splice(index, 1);
+                        
+                        if (boardPieces[key].length === 0) {
+                            delete boardPieces[key];
+                        }
+                    }
+                }
+            }
+            
+            // 移动棋盘上的飞机
+            function moveBoardPiece(player, pieceId, fromRow, fromCol, toRow, toCol) {
+                removeBoardPiece(player, pieceId, fromRow, fromCol);
+                return addBoardPiece(player, pieceId, toRow, toCol);
+            }
+            
+            // 获取玩家的路径
+            function getPlayerPath(player) {
+                return player === 'red' ? redPath : bluePath;
+            }
+            
+            // 根据位置索引获取坐标
+            function getPositionFromIndex(player, index) {
+                const path = getPlayerPath(player);
+                if (index < 0) return path[0];
+                if (index >= path.length) return path[path.length - 1];
+                return path[index];
+            }
+            
+            // 初始化棋子
+            function initPieces() {
+                // 清空现有棋子
+                for (const player of PLAYERS) {
+                    pieces[player].base = 4;
+                    pieces[player].finish = 0;
+                    pieces[player].pieces = [];
+                    
+                    const piecesContainer = document.getElementById(`${player}-pieces`);
+                    if (piecesContainer) {
+                        piecesContainer.innerHTML = '';
+                        
+                        for (let i = 0; i < 4; i++) {
+                            const piece = document.createElement('div');
+                            piece.className = `panel-piece ${player}`;
+                            piece.textContent = i + 1;
+                            piece.dataset.player = player;
+                            piece.dataset.id = i;
+                            piece.dataset.state = 'base'; // base, board, finish
+                            
+                            piece.addEventListener('click', () => selectPiece(player, i));
+                            
+                            piecesContainer.appendChild(piece);
+                            pieces[player].pieces.push({
+                                id: i,
+                                state: 'base',
+                                position: -1, // -1表示在基地，0表示在起点
+                                boardPosition: null,
+                                element: piece,
+                                boardElement: null
+                            });
+                        }
+                    }
+                }
+                
+                // 更新显示
+                updatePieceDisplays();
+            }
+            
+            // 更新棋子显示状态
+            function updatePieceDisplays() {
+                for (const player of PLAYERS) {
+                    document.getElementById(`${player}-base`).textContent = pieces[player].base;
+                    document.getElementById(`${player}-finish`).textContent = pieces[player].finish;
+                    
+                    // 更新棋子激活状态
+                    pieces[player].pieces.forEach(piece => {
+                        if (piece.state === 'board' && currentPlayer === player && diceValue > 0) {
+                            piece.element.classList.add('active');
+                            if (piece.boardElement) {
+                                piece.boardElement.classList.add('active');
+                            }
+                        } else {
+                            piece.element.classList.remove('active');
+                            if (piece.boardElement) {
+                                piece.boardElement.classList.remove('active');
+                            }
+                        }
+                        
+                        // 更新完成状态
+                        if (piece.state === 'finish') {
+                            piece.element.classList.add('finished');
+                            if (piece.boardElement) {
+                                piece.boardElement.classList.add('finished');
+                            }
+                        } else {
+                            piece.element.classList.remove('finished');
+                            if (piece.boardElement) {
+                                piece.boardElement.classList.remove('finished');
+                            }
+                        }
+                    });
+                }
+            }
+            
+            // 投掷骰子
+            function rollDice() {
+                if (gameOver) return;
+                
+                // 清除所有激活状态
+                document.querySelectorAll('.panel-piece.active, .board-piece.active').forEach(el => {
+                    el.classList.remove('active');
+                });
+                
+                // 动画效果
+                dice.classList.add('rolling');
+                dice.textContent = '...';
+                
+                setTimeout(() => {
+                    diceValue = Math.floor(Math.random() * 6) + 1;
+                    dice.textContent = diceValue;
+                    dice.classList.remove('rolling');
+                    
+                    status.textContent = `${PLAYER_NAMES[currentPlayer]}掷得 ${diceValue} 点`;
+                    
+                    // 检查是否可以起飞
+                    const boardPieces = pieces[currentPlayer].pieces.filter(p => p.state === 'board');
+                    if (diceValue === 6 && pieces[currentPlayer].base > 0) {
+                        status.textContent += ' - 可以起飞一架飞机！点击飞机选择';
+                    } else if (boardPieces.length > 0) {
+                        status.textContent += ' - 点击一架飞机移动';
+                    } else {
+                        status.textContent += ' - 无法移动，轮到下一位玩家';
+                        setTimeout(nextPlayer, 1000);
+                    }
+                    
+                    updatePieceDisplays();
+                }, 500);
+            }
+            
+            // 选择棋子
+            function selectPiece(player, pieceId) {
+                if (gameOver || player !== currentPlayer || diceValue === 0) return;
+                
+                const piece = pieces[player].pieces[pieceId];
+                
+                // 如果棋子已经完成，不执行任何操作
+                if (piece.state === 'finish') {
+                    return;
+                }
+                
+                // 清除所有激活状态
+                document.querySelectorAll('.panel-piece.active, .board-piece.active').forEach(el => {
+                    el.classList.remove('active');
+                });
+                
+                // 检查是否可以移动
+                if (piece.state === 'base' && diceValue === 6) {
+                    // 起飞
+                    piece.state = 'board';
+                    piece.position = 0; // 从起点开始
+                    pieces[player].base--;
+                    
+                    // 获取起点位置
+                    const startPos = getPositionFromIndex(player, 0);
+                    piece.boardPosition = {row: startPos.row, col: startPos.col};
+                    piece.boardElement = addBoardPiece(player, pieceId, piece.boardPosition.row, piece.boardPosition.col);
+                    
+                    // 更新显示
+                    piece.element.dataset.state = 'board';
+                    
+                    status.textContent = `${PLAYER_NAMES[player]}的飞机${pieceId+1}起飞了！`;
+                    
+                    // 检查是否可以再次投掷（掷得6点可以再掷一次）
+                    if (diceValue === 6) {
+                        diceValue = 0;
+                        updatePieceDisplays();
+                        status.textContent = `${PLAYER_NAMES[currentPlayer]}再掷一次`;
+                    } else {
+                        nextPlayer();
+                    }
+                } else if (piece.state === 'board') {
+                    // 移动棋子
+                    const newPosition = piece.position + diceValue;
+                    const path = getPlayerPath(player);
+                    
+                    // 检查是否到达终点
+                    if (newPosition >= path.length - 1) {
+                        // 到达终点
+                        piece.state = 'finish';
+                        piece.element.dataset.state = 'finish';
+                        pieces[player].finish++;
+                        
+                        // 从棋盘上移除
+                        if (piece.boardElement) {
+                            removeBoardPiece(player, pieceId, piece.boardPosition.row, piece.boardPosition.col);
+                            piece.boardElement = null;
+                        }
+                        
+                        // 获取终点位置并显示
+                        const finishPos = getPositionFromIndex(player, path.length - 1);
+                        piece.boardPosition = {row: finishPos.row, col: finishPos.col};
+                        piece.boardElement = addBoardPiece(player, pieceId, piece.boardPosition.row, piece.boardPosition.col);
+                        
+                        status.textContent = `${PLAYER_NAMES[player]}的飞机${pieceId+1}到达终点！`;
+                        
+                        // 检查是否获胜
+                        if (pieces[player].finish === 4) {
+                            gameOver = true;
+                            showWinMessage(`${PLAYER_NAMES[player]}获胜！`);
+                            return;
+                        }
+                        
+                        // 检查是否掷到6点（可以再次投掷）
+                        if (diceValue === 6) {
+                            diceValue = 0;
+                            updatePieceDisplays();
+                            status.textContent = `${PLAYER_NAMES[currentPlayer]}再掷一次`;
+                        } else {
+                            nextPlayer();
+                        }
+                    } else {
+                        // 正常移动
+                        const oldPosition = piece.boardPosition;
+                        piece.position = newPosition;
+                        
+                        // 获取新位置
+                        const newPos = getPositionFromIndex(player, newPosition);
+                        
+                        // 更新棋盘上的飞机位置
+                        if (piece.boardElement && oldPosition) {
+                            piece.boardElement = moveBoardPiece(
+                                player, 
+                                pieceId, 
+                                oldPosition.row, 
+                                oldPosition.col, 
+                                newPos.row, 
+                                newPos.col
+                            );
+                        }
+                        
+                        piece.boardPosition = {row: newPos.row, col: newPos.col};
+                        
+                        status.textContent = `${PLAYER_NAMES[player]}的飞机${pieceId+1}移动了${diceValue}步`;
+                        
+                        // 检查是否掷到6点（可以再次投掷）
+                        if (diceValue === 6) {
+                            diceValue = 0;
+                            updatePieceDisplays();
+                            status.textContent = `${PLAYER_NAMES[currentPlayer]}再掷一次`;
+                        } else {
+                            nextPlayer();
+                        }
+                    }
+                }
+                
+                diceValue = 0;
+                updatePieceDisplays();
+            }
+            
+            // 切换到下一位玩家
+            function nextPlayer() {
+                const currentIndex = PLAYERS.indexOf(currentPlayer);
+                currentPlayer = PLAYERS[(currentIndex + 1) % PLAYERS.length];
+                
+                diceValue = 0;
+                updatePieceDisplays();
+                status.textContent = `${PLAYER_NAMES[currentPlayer]}回合 - 点击骰子开始`;
+            }
+            
+            // 显示获胜信息
+            function showWinMessage(message) {
+                const winMessage = document.createElement('div');
+                winMessage.className = 'win-message';
+                winMessage.textContent = message;
+                document.querySelector('.container').appendChild(winMessage);
+                
+                setTimeout(() => {
+                    winMessage.style.opacity = '0';
+                    winMessage.style.transition = 'opacity 1s';
+                    setTimeout(() => winMessage.remove(), 1000);
+                }, 3000);
+            }
+            
+            // 重新开始游戏
+            function resetGame() {
+                currentPlayer = 'red';
+                diceValue = 0;
+                gameOver = false;
+                dice.textContent = '?';
+                status.textContent = '红方回合 - 点击骰子开始';
+                initBoard();
+                initPieces();
+            }
+            
+            // 事件监听
+            rollBtn.addEventListener('click', rollDice);
+            dice.addEventListener('click', rollDice);
+            resetBtn.addEventListener('click', resetGame);
+            
+            // 初始化游戏
+            initBoard();
+            initPieces();
+        });
+    </script>
+</body>
+</html>

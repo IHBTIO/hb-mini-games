@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>极简五子棋</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
+            color: white;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        header {
+            margin-bottom: 20px;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        
+        .game-info {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        
+        .status {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 10px;
+        }
+        
+        .player {
+            display: flex;
+            align-items: center;
+            margin: 0 15px;
+        }
+        
+        .player-icon {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+        
+        .black-icon {
+            background: #000;
+            border: 2px solid #fff;
+        }
+        
+        .white-icon {
+            background: #fff;
+            border: 2px solid #000;
+        }
+        
+        button {
+            background: #ff6b6b;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 10px;
+        }
+        
+        button:hover {
+            background: #ff5252;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .board-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        
+        .board {
+            display: grid;
+            grid-template-columns: repeat(15, 1fr);
+            grid-template-rows: repeat(15, 1fr);
+            width: 90vmin;
+            height: 90vmin;
+            max-width: 600px;
+            max-height: 600px;
+            background: #e8c48f;
+            border: 10px solid #8B4513;
+            border-radius: 5px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+        
+        .cell {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-right: 1px solid #888;
+            border-bottom: 1px solid #888;
+            cursor: pointer;
+        }
+        
+        .cell:nth-child(15n) {
+            border-right: none;
+        }
+        
+        .cell:nth-child(n+211) {
+            border-bottom: none;
+        }
+        
+        .piece {
+            width: 85%;
+            height: 85%;
+            border-radius: 50%;
+            position: relative;
+            z-index: 2;
+            box-shadow: 0 3px 5px rgba(0, 0, 0, 0.3);
+        }
+        
+        .black {
+            background: radial-gradient(circle at 30% 30%, #555, #000);
+        }
+        
+        .white {
+            background: radial-gradient(circle at 30% 30%, #fff, #ddd);
+        }
+        
+        .win-message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 30px 50px;
+            border-radius: 10px;
+            text-align: center;
+            z-index: 10;
+            font-size: 2rem;
+            box-shadow: 0 0 30px rgba(255, 215, 0, 0.8);
+            border: 3px solid gold;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { box-shadow: 0 0 15px rgba(255, 215, 0, 0.8); }
+            50% { box-shadow: 0 0 40px rgba(255, 215, 0, 1); }
+            100% { box-shadow: 0 0 15px rgba(255, 215, 0, 0.8); }
+        }
+        
+        .instructions {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-size: 0.9rem;
+        }
+        
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2rem;
+            }
+            
+            .status {
+                font-size: 1.2rem;
+            }
+            
+            .game-info {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>极简五子棋</h1>
+        </header>
+        
+        <div class="game-info">
+            <div class="player">
+                <div class="player-icon black-icon"></div>
+                <span>黑方</span>
+            </div>
+            <div class="status" id="status">黑方回合</div>
+            <div class="player">
+                <div class="player-icon white-icon"></div>
+                <span>白方</span>
+            </div>
+        </div>
+        
+        <button id="resetBtn">重新开始</button>
+        
+        <div class="board-container">
+            <div class="board" id="board"></div>
+        </div>
+        
+        <div class="instructions">
+            <p>规则：黑白双方轮流在棋盘上落子，先在横向、纵向或对角线上连成五子者获胜</p>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const board = document.getElementById('board');
+            const status = document.getElementById('status');
+            const resetBtn = document.getElementById('resetBtn');
+            
+            const BOARD_SIZE = 15;
+            let currentPlayer = 'black';
+            let gameOver = false;
+            let boardState = Array(BOARD_SIZE).fill().map(() => Array(BOARD_SIZE).fill(null));
+            
+            // 创建棋盘
+            function createBoard() {
+                board.innerHTML = '';
+                for (let row = 0; row < BOARD_SIZE; row++) {
+                    for (let col = 0; col < BOARD_SIZE; col++) {
+                        const cell = document.createElement('div');
+                        cell.classList.add('cell');
+                        cell.dataset.row = row;
+                        cell.dataset.col = col;
+                        board.appendChild(cell);
+                        
+                        cell.addEventListener('click', () => handleMove(row, col));
+                    }
+                }
+            }
+            
+            // 处理落子
+            function handleMove(row, col) {
+                if (gameOver || boardState[row][col] !== null) return;
+                
+                // 更新棋盘状态
+                boardState[row][col] = currentPlayer;
+                
+                // 创建棋子
+                const cell = document.querySelector(`.cell[data-row="${row}"][data-col="${col}"]`);
+                const piece = document.createElement('div');
+                piece.classList.add('piece', currentPlayer);
+                cell.appendChild(piece);
+                
+                // 检查胜利
+                if (checkWin(row, col)) {
+                    gameOver = true;
+                    showWinMessage(`${currentPlayer === 'black' ? '黑方' : '白方'}获胜！`);
+                    return;
+                }
+                
+                // 切换玩家
+                currentPlayer = currentPlayer === 'black' ? 'white' : 'black';
+                status.textContent = `${currentPlayer === 'black' ? '黑方' : '白方'}回合`;
+            }
+            
+            // 检查胜利条件
+            function checkWin(row, col) {
+                const directions = [
+                    [0, 1],   // 水平 →
+                    [1, 0],   // 垂直 ↓
+                    [1, 1],   // 对角线 ↘
+                    [1, -1]   // 对角线 ↙
+                ];
+                
+                for (const [dx, dy] of directions) {
+                    let count = 1;
+                    
+                    // 正向检查
+                    for (let i = 1; i <= 4; i++) {
+                        const newRow = row + dx * i;
+                        const newCol = col + dy * i;
+                        
+                        if (newRow >= 0 && newRow < BOARD_SIZE && 
+                            newCol >= 0 && newCol < BOARD_SIZE && 
+                            boardState[newRow][newCol] === currentPlayer) {
+                            count++;
+                        } else {
+                            break;
+                        }
+                    }
+                    
+                    // 反向检查
+                    for (let i = 1; i <= 4; i++) {
+                        const newRow = row - dx * i;
+                        const newCol = col - dy * i;
+                        
+                        if (newRow >= 0 && newRow < BOARD_SIZE && 
+                            newCol >= 0 && newCol < BOARD_SIZE && 
+                            boardState[newRow][newCol] === currentPlayer) {
+                            count++;
+                        } else {
+                            break;
+                        }
+                    }
+                    
+                    if (count >= 5) return true;
+                }
+                
+                return false;
+            }
+            
+            // 显示胜利信息
+            function showWinMessage(message) {
+                status.textContent = message;
+                
+                const winMessage = document.createElement('div');
+                winMessage.classList.add('win-message');
+                winMessage.textContent = message;
+                board.appendChild(winMessage);
+            }
+            
+            // 重置游戏
+            function resetGame() {
+                boardState = Array(BOARD_SIZE).fill().map(() => Array(BOARD_SIZE).fill(null));
+                currentPlayer = 'black';
+                gameOver = false;
+                status.textContent = '黑方回合';
+                createBoard();
+            }
+            
+            // 事件监听
+            resetBtn.addEventListener('click', resetGame);
+            
+            // 初始化游戏
+            createBoard();
+        });
+    </script>
+</body>
+</html>
