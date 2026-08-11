@@ -4,12 +4,12 @@ A collection of classic browser games I built as coding practice with AI assista
 
 ## 🕹️ Games Included
 
-| Game | Description | File |
-|------|-------------|------|
-| **Flight Chess (飞行棋)** | Classic board game with dice-rolling mechanics | `flight-chess.html` |
-| **Gomoku (五子棋)** | Five-in-a-row on a 15×15 board, two-player | `gomoku.html` |
-| **Schulte Table (舒尔特表格)** | Focus training — find numbers from 1 to 25 in order | `schulte-table.html` |
-| **Digital Huarong (数字华容道)** | 4×4 sliding puzzle, rearrange numbers into order | `huarong.html` |
+| Game | Description |
+|------|-------------|
+| **Flight Chess (飞行棋)** | Classic board game with dice-rolling mechanics |
+| **Gomoku (五子棋)** | Five-in-a-row on a 15×15 board, two-player |
+| **Schulte Table (舒尔特表格)** | Focus training — find numbers from 1 to 25 in order |
+| **Digital Huarong (数字华容道)** | 4×4 sliding puzzle, rearrange numbers into order |
 
 ## 🚀 How to Play
 
